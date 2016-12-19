@@ -21,6 +21,8 @@ function pushToSQS($formData)
         $queue = $_GET['queue'];
         $messageBody = $_GET['messageBody'];
 
+        $successResponse = 'true';
+
         $baseUrl = "https://sqs." . $region . ".amazonaws.com/" . $accountNumber . "/" . $queue . "?Action=SendMessage&MessageBody=" . $messageBody;
 
         foreach ($xmlBody->xpath('//soapenv:Body') as $body)
@@ -94,9 +96,14 @@ function pushToSQS($formData)
                 $sendUrl = $baseUrl . $orgParams . $otherParams;
 
                 $submitGetToSQS = file_get_contents($sendUrl);
+
+                if (strpos($submitGetToSQS, 'MessageId') === false && strpos($submitGetToSQS, 'RequestId') === false) 
+                {
+                    $successResponse = 'false';
+                }
             }
         }
 
-        echo '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:out="http://soap.sforce.com/2005/09/outbound"><soapenv:Header/><soapenv:Body><out:notificationsResponse><out:Ack>true</out:Ack></out:notificationsResponse></soapenv:Body></soapenv:Envelope>';
+        echo '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:out="http://soap.sforce.com/2005/09/outbound"><soapenv:Header/><soapenv:Body><out:notificationsResponse><out:Ack>'. $successResponse . '</out:Ack></out:notificationsResponse></soapenv:Body></soapenv:Envelope>';
     }
 }
